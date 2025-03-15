@@ -3,4 +3,4 @@
 
 using namespace std;
 
-#define DIMENSION 2048
+#define N 2048

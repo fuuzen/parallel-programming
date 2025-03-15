@@ -1,9 +1,9 @@
 #include "gemm.h"
 
 void naiveGEMM(
-  int A[DIMENSION][DIMENSION],
-  int B[DIMENSION][DIMENSION],
-  int C[DIMENSION][DIMENSION],
+  int** A,
+  int** B,
+  int** C,
   int m,
   int n,
   int k

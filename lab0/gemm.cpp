@@ -5,13 +5,13 @@
 #include <iomanip>
 chrono::time_point<chrono::high_resolution_clock> start_time, end_time;
 
-void genRandomMatrix(int matrix[DIMENSION][DIMENSION]){
+void genRandomMatrix(int matrix[N][N]){
   random_device rd;
   mt19937 gen(rd());
   uniform_int_distribution<> dis(0, 100);
 
-  for(int i = 0; i < DIMENSION; i++){
-    for(int j = 0; j < DIMENSION; j++){
+  for(int i = 0; i < N; i++){
+    for(int j = 0; j < N; j++){
       matrix[i][j] = dis(gen);
     }
   }
@@ -22,27 +22,27 @@ int main(){
   ios::sync_with_stdio(false);
   cout.tie(0);
 
-  int matrixA[DIMENSION][DIMENSION];
-  int matrixB[DIMENSION][DIMENSION];
-  int matrixC[DIMENSION][DIMENSION];
+  int matrixA[N][N];
+  int matrixB[N][N];
+  int matrixC[N][N];
 
   genRandomMatrix(matrixA);
   genRandomMatrix(matrixB);
-
   
   start_time = chrono::high_resolution_clock::now();
 
   #ifdef NAIVE
-  naiveGEMM(matrixA, matrixB, matrixC, DIMENSION, DIMENSION, DIMENSION);
+  naiveGEMM(matrixA, matrixB, matrixC, N, N, N);
   #endif
 
   end_time = chrono::high_resolution_clock::now();
-  auto ns = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
-  auto us = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
-  auto ms = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-  cout << ns.count() << " ns" << endl
-     << us.count() << " us" << endl
-     << ms.count() << " ms" << endl;
+
+  chrono::duration<double> elapsed = end_time - start_time;
+
+  double flops = 2.0 * N * N * N;
+  double gflops = (flops / elapsed.count()) / 1e9;
+
+  cout << "time: " << elapsed.count() << " s" << endl << "GLOPS: " << gflops << endl;
 
   return 0;
 }
