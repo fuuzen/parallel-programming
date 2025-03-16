@@ -37,4 +37,4 @@ if __name__ == '__main__':
   elapsed_time = end_time - start_time
   flops = 2 * N**3
   print("Time taken: ", elapsed_time)
-  print("GFLOPS: ", (flops / elapsed_time) / 1e9)
+  print("GFLOPS: ", flops / elapsed_time)

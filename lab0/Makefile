@@ -1,19 +1,23 @@
-CXX = g++
+build:
+	if [ ! -d "build" ]; then mkdir build; fi
+	cd build && cmake .. && make -j8
 
-CXXFLAGS = -std=c++20 -Wall -Wextra -march=native -mtune=native
+test1: build
+	./build/test1
 
-SRCS = gemm.cpp naive.cpp
+test2: build
+	./build/test2
 
-OBJS = $(SRCS:.cpp=.o)
+test3: build
+	./build/test3
 
-naive: $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+test4: build
+	./build/test4
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
+test5: build
+	./build/test5
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	if [ -d "build" ]; then rm -rf build; fi
 
 .PHONY: all clean

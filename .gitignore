@@ -12,3 +12,6 @@
 .Trashes
 Thumbs.db
 desktop.ini
+
+# make
+build

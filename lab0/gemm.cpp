@@ -1,48 +1,39 @@
 #include "gemm.h"
-#include "naive.cpp"
-
-#include <chrono>
-#include <iomanip>
-chrono::time_point<chrono::high_resolution_clock> start_time, end_time;
-
-void genRandomMatrix(int matrix[N][N]){
-  random_device rd;
-  mt19937 gen(rd());
-  uniform_int_distribution<> dis(0, 100);
-
-  for(int i = 0; i < N; i++){
-    for(int j = 0; j < N; j++){
-      matrix[i][j] = dis(gen);
-    }
-  }
-}
+#include "methods/methods.h"
 
 int main(){
-  cin.tie(0);
-  ios::sync_with_stdio(false);
-  cout.tie(0);
+  double *A = (double *)malloc(M * K * sizeof(double));
+  double *B = (double *)malloc(K * N * sizeof(double));
+  double *C = (double *)malloc(M * N * sizeof(double));
 
-  int matrixA[N][N];
-  int matrixB[N][N];
-  int matrixC[N][N];
+  // 初始化矩阵 A B C
+  for (int i = 0; i < M * K; i++) A[i] = static_cast<double>(rand()) / RAND_MAX;
+  for (int i = 0; i < K * N; i++) B[i] = static_cast<double>(rand()) / RAND_MAX;
+  for (int i = 0; i < M * N; i++) C[i] = 0.0;
 
-  genRandomMatrix(matrixA);
-  genRandomMatrix(matrixB);
-  
-  start_time = chrono::high_resolution_clock::now();
+  chrono::time_point<chrono::high_resolution_clock> start_time = chrono::high_resolution_clock::now();
 
-  #ifdef NAIVE
-  naiveGEMM(matrixA, matrixB, matrixC, N, N, N);
+  #ifdef METHOD0
+  method0(A, B, C);
+  #endif
+  #ifdef METHOD1
+  method1(A, B, C);
+  #endif
+  #ifdef METHOD2
+  method2(A, B, C);
+  #endif
+  #ifdef METHOD3
+  method3(A, B, C);
   #endif
 
-  end_time = chrono::high_resolution_clock::now();
+  chrono::time_point<chrono::high_resolution_clock> end_time = chrono::high_resolution_clock::now();
 
   chrono::duration<double> elapsed = end_time - start_time;
 
   double flops = 2.0 * N * N * N;
-  double gflops = (flops / elapsed.count()) / 1e9;
+  double gflops = flops / elapsed.count();
 
-  cout << "time: " << elapsed.count() << " s" << endl << "GLOPS: " << gflops << endl;
+  cout << "Time: " << elapsed.count() << " s" << endl << "GLOPS: " << gflops << endl;
 
   return 0;
 }
