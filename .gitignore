@@ -13,5 +13,7 @@
 Thumbs.db
 desktop.ini
 
-# make
+# custom
 build
+*.log
+*.pid

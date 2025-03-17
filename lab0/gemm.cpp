@@ -33,7 +33,7 @@ int main(){
   double flops = 2.0 * N * N * N;
   double gflops = flops / elapsed.count();
 
-  cout << "Time: " << elapsed.count() << " s" << endl << "GLOPS: " << gflops << endl;
+  cout << "Time: " << elapsed.count() << " s" << endl << "GFLOPS: " << gflops << endl;
 
   return 0;
 }

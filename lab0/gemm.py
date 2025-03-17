@@ -1,7 +1,9 @@
 import random
 import time
 
+M = 2048
 N = 2048
+K = 2048
 
 def randomMatrix(m, n):
   # 产生随机矩阵
@@ -26,11 +28,8 @@ def naiveGEMM(A, B):
   return C
 
 if __name__ == '__main__':
-  m = N
-  n = N
-  k = N
-  A = randomMatrix(m, n)
-  B = randomMatrix(n, k)
+  A = randomMatrix(M, N)
+  B = randomMatrix(N, K)
   start_time = time.process_time()
   C = naiveGEMM(A, B)
   end_time = time.process_time()

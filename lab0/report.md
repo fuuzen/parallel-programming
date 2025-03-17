@@ -1,10 +1,109 @@
-| 版本    | 实现描述    | 运行时间（sec.） | 相对加速比 | 绝对加速比 | 浮点性能（GFLOPS） | 峰值性能百分比 |
-|---------|-------------|----------------|------------|------------|-------------------|----------------|
-| 1       | Python      | 635.248678056 |           |           |                  |               |
-| 2       | C/C++       | 257.414 |           |           |   6.67404e+07  |               |
-| 3       | 调整循环顺序 |              |           |           |                  |               |
-| 4       | 编译优化    |              |           |           |                  |               |
-| 5       | 循环展开    |              |           |           |                  |               |
-| 6       | Intel MKL   |              |           |           |                  |               |
+<div class="cover" style="page-break-after:always;font-family:方正公文仿宋;width:100%;height:100%;border:none;margin: 0 auto;text-align:center;">
+    <div style="width:70%;margin: 0 auto;height:0;padding-bottom:10%;">
+        </br>
+        <img src="../sysu-name.jpg" alt="校名" style="width:100%;"/>
+    </div>
+    </br></br></br></br>
+    <div style="width:60%;margin: 0 auto;height:0;padding-bottom:40%;">
+        <img src="../sysu.jpg" alt="校徽" style="width:100%;"/>
+    </div>
+</br></br></br></br></br></br>
+    <span style="font-family:华文黑体Bold;text-align:center;font-size:20pt;margin: 10pt auto;line-height:30pt;">本科生实验报告</span>
+    </br>
+    </br>
+    <table style="border:none;text-align:center;width:72%;font-family:仿宋;font-size:14px; margin: 0 auto;">
+    <tbody style="font-family:方正公文仿宋;font-size:12pt;">
+        <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">实验课程</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">并行程序设计与算法实验</td>
+      </tr>
+        <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">实验名称</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">0-环境设置与串行矩阵乘法</td>
+      </tr>
+        <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">专业名称</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">计算机科学与技术</td>
+      </tr>
+        <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">学生姓名</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">李世源</td>
+      </tr>
+        <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">学生学号</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">22342043</td>
+      </tr>
+        <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">实验地点</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋"></td>
+      </tr>
+        <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">实验成绩</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋"></td>
+      </tr>
+      <tr style="font-weight:normal;"> 
+            <td style="width:20%;text-align:center;">报告时间</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">2025年03月17日</td>
+      </tr>
+    </tbody>              
+    </table>
+</div>
 
-python 运行程序情况，单核（C2）上持续运行
+<!-- 注释语句：导出PDF时会在这里分页 -->
+
+## 实验环境
+
+我的测试平台处理器是 Intel Xeon E7 处理器，Intel 给出的性能信息如下：
+
+| Processor Group | GFLOPS | APP | 
+|-----------------|--------|-----|
+| Intel® Xeon® Processor E7-4830 v3 (30M Cache, 2.10 GHz) E7-4830V3 | 403.2 | 0.12096 |
+
+数据来自文档 [APP Metrics for Intel® Microprocessors - Intel® Xeon® Processor](https://www.intel.com/content/www/us/en/content-details/840270/app-metrics-for-intel-microprocessors-intel-xeon-processor.html)。
+
+由于实验要求串行实现，所以以下测试我都以处理器的上述 Intel 给出的单核 GFLOPS 计算峰值性能百分比。
+
+## 测试方法
+
+python 运行时间较长，为了后台运行并且方便监控，指令如下：
+
+```shell
+nohup python gemm.py > test0.log 2>&1 & set pid $last_pid; echo $pid > test0.pid
+```
+
+这样记录后台 python 进程的 pid 在 `test0.pid`。将运行的输出放在 `test0.log`。
+
+cpp 由于需要控制编译参数（优化等级）、使用运算的不同函数，所以我编写了简单的 `CMakeLists.txt`，设置了对应表格中 C++ 的 5 种测试情景的构建对象，并用 `Makefile` 控制，例如这样可以测试 “Intel MKL” ：
+
+```shell
+make test5
+```
+
+## 实验结果
+
+以下是 $N=M=K2048$ 规模双精度 GEMM 的测试结果：
+
+| 版本     | 实现描述    | 运行时间（sec.） | 相对加速比 | 绝对加速比 | 浮点性能（GFLOPS） | 峰值性能百分比 |
+|---------|------------|----------------|------------|------------|-------------------|----------------|
+| 1       | Python     | 2489.4458 |           |           | 6.901081e-3 | 0.1712% |
+| 2       | C/C++      | 257.414 | 9.6709 | 9.6709 | 6.67404e-2  | 1.6553% |
+| 3       | 调整循环顺序 | 38.1441 | 6.7484 | 65.2642| 4.50394e-1 | 11.1705% |
+| 4       | 编译优化    | 10.2802 | 3.7104 | 242.1592 | 1.67117 | 41.4477% |
+| 5       | 循环展开    | 6.12678 | 1.6779 | 406.3220 | 2.80406 | 69.5451% |
+| 6       | Intel MKL  | 0.223758 | 27.3813 | 11125.6169 | 7.67787e+1 | 1904.2336% |
+
+<!-- The folloing content is generated by AI -->
+
+在性能优化的过程中，从最初的 Python 实现逐步过渡到 C/C++，并通过一系列优化手段最终达到了显著的性能提升。
+
+由于 Python 是一种解释型语言，缺乏编译优化和底层硬件控制，因此在数值计算密集型任务中表现较差。
+
+切换到 C/C++ 实现，运行时间大幅缩短至 257.414 秒，相对 Python 实现了 9.6709 倍的加速。C/C++ 作为编译型语言，能够直接生成高效的机器码，避免了 Python 的解释开销。尽管如此，此时的实现仍然是朴素的循环，没有引入任何优化技术。我的编译参数也控制在了 `-O0` 没有任何编译优化。
+
+调整循环顺序后，运行时间进一步减少到 38.1441 秒，相对于 C/C++ 的初始版本实现了 6.7484 倍的加速，此时编译参数依然控制在 `-O0` 没有任何编译优化。调整循环顺序的目的是更好地利用 CPU 缓存局部性，减少缓存未命中的发生。这些优化显著提高了浮点性能，表明缓存访问模式对性能的影响非常大。
+
+接下来在上一版本的代码基础上启用了编译优化（`-Ofast`），运行时间进一步缩短至 10.2802 秒，相对于调整循环顺序后的版本实现了 3.7104 倍的加速。编译器优化能够自动进行部分循环展开、向量化、指令重排等操作，从而显著提高代码的执行效率。浮点性能接近峰值性能的 41.45%，说明编译优化对性能的提升非常显著。
+
+继续在上一版本（代码和编译参数）的基础上，通过手动进行循环展开，运行时间进一步减少到 6.12678 秒，相对于编译优化后的版本实现了 1.6779 倍的加速。循环展开可以减少循环控制开销，增加指令级并行性，将更多重复利用的数据手动留在寄存器，从而进一步提高性能。然而一开始我只对最内层循环做了循环展开，几乎没有比上一版本更快，所以我对第二层循环也进行了展开，两层展开每次都是以步长为 4 进行，第二次循环将 4 个数据手动留在寄存器里，结果得到了虽然并没有特别显著但也足够明显的加速。
+
+最后，我们引入了 Intel MKL（数学核心库），运行时间大幅缩短至 0.223758 秒，相对于手动循环展开的版本实现了 27.3813 倍的加速。Intel MKL 是高度优化的数学库，充分利用了 CPU 的 SIMD 指令集（如 AVX、AVX2）、多线程并行化以及缓存优化。浮点性能达到 76.7787 GFLOPS，远超手动优化的版本，表明专业库在性能优化方面的巨大优势。峰值性能百分比超过 1900%，说明 Intel MKL 能够充分利用现代 CPU 的计算能力。

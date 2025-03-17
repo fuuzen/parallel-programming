@@ -10,8 +10,8 @@ void method0(
 ) {
   for(int i = 0; i < M; i++) {
     for(int j = 0; j < N; j++) {
-      for(int l = 0; l < K; l++) {
-        C[i * N + j] += A[i * K + l] * B[l * N + j];
+      for(int k = 0; k < K; k++) {
+        C[i * N + j] += A[i * K + k] * B[k * N + j];
       }
     }
   }
