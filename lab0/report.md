@@ -1,13 +1,13 @@
 <div class="cover" style="page-break-after:always;font-family:方正公文仿宋;width:100%;height:100%;border:none;margin: 0 auto;text-align:center;">
-    <div style="width:70%;margin: 0 auto;height:0;padding-bottom:10%;">
+    <div style="width:50%;margin: 0 auto;height:0;padding-bottom:10%;">
         </br>
-        <img src="../sysu-name.jpg" alt="校名" style="width:100%;"/>
+        <img src="../sysu-name.png" alt="校名" style="width:100%;"/>
     </div>
-    </br></br></br></br>
-    <div style="width:60%;margin: 0 auto;height:0;padding-bottom:40%;">
-        <img src="../sysu.jpg" alt="校徽" style="width:100%;"/>
+    </br></br>
+    <div style="width:40%;margin: 0 auto;height:0;padding-bottom:40%;">
+        <img src="../sysu.png" alt="校徽" style="width:100%;"/>
     </div>
-</br></br></br></br></br></br>
+		</br></br></br>
     <span style="font-family:华文黑体Bold;text-align:center;font-size:20pt;margin: 10pt auto;line-height:30pt;">本科生实验报告</span>
     </br>
     </br>
@@ -49,7 +49,7 @@
     </table>
 </div>
 
-<!-- 注释语句：导出PDF时会在这里分页 -->
+<!-- 注释语句：导出PDF时会在这里分页，使用 Typora Newsprint 主题放大 125% -->
 
 ## 实验环境
 
@@ -106,4 +106,4 @@ make test5
 
 继续在上一版本（代码和编译参数）的基础上，通过手动进行循环展开，运行时间进一步减少到 6.12678 秒，相对于编译优化后的版本实现了 1.6779 倍的加速。循环展开可以减少循环控制开销，增加指令级并行性，将更多重复利用的数据手动留在寄存器，从而进一步提高性能。然而一开始我只对最内层循环做了循环展开，几乎没有比上一版本更快，所以我对第二层循环也进行了展开，两层展开每次都是以步长为 4 进行，第二次循环将 4 个数据手动留在寄存器里，结果得到了虽然并没有特别显著但也足够明显的加速。
 
-最后，我们引入了 Intel MKL（数学核心库），运行时间大幅缩短至 0.223758 秒，相对于手动循环展开的版本实现了 27.3813 倍的加速。Intel MKL 是高度优化的数学库，充分利用了 CPU 的 SIMD 指令集（如 AVX、AVX2）、多线程并行化以及缓存优化。浮点性能达到 76.7787 GFLOPS，远超手动优化的版本，表明专业库在性能优化方面的巨大优势。峰值性能百分比超过 1900%，说明 Intel MKL 能够充分利用现代 CPU 的计算能力。
+最后引入了 Intel MKL，运行时间大幅缩短至 0.223758 秒，相对于手动循环展开的版本实现了 27.3813 倍的加速。Intel MKL 是高度优化的数学库，充分利用了 CPU 的 SIMD 指令集（如 AVX、AVX2）、多线程并行化以及缓存优化。浮点性能达到 76.7787 GFLOPS，远超手动优化的版本，表明专业库在性能优化方面的巨大优势。峰值性能百分比超过 1900%，说明 Intel MKL 能够充分利用现代 CPU 的计算能力。
