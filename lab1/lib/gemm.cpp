@@ -1,10 +1,9 @@
 #include "lib.h"
 
-void method2(
+void gemm(
   const double *A,
   const double *B,
-  double *C,
-  const int local_M
+  double *C
 ) {
   for (int i = 0; i < local_M; ++i) {
     int k = 0;

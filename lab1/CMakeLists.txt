@@ -4,10 +4,15 @@ set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB_RECURSE LIB_SOURCES "lib/*.cpp")
 
-add_executable(test main.cpp ${LIB_SOURCES})
-
 find_package(MPI REQUIRED)
+find_package(MKL REQUIRED)
 
-target_link_libraries(test PUBLIC MPI::MPI_CXX)
+add_executable(test1 main.cpp ${LIB_SOURCES})
+target_include_directories(test1 PRIVATE ./lib)
+target_link_libraries(test1 PUBLIC MPI::MPI_CXX MKL::MKL)
+target_compile_options(test1 PUBLIC -Ofast -DMETHOD1)
 
-target_compile_options(test PUBLIC -Ofast -DMETHOD1)
+add_executable(test2 main.cpp ${LIB_SOURCES})
+target_include_directories(test2 PRIVATE ./lib)
+target_link_libraries(test2 PUBLIC MPI::MPI_CXX MKL::MKL)
+target_compile_options(test2 PUBLIC -Ofast -DMETHOD2)
