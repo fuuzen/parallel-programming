@@ -13,8 +13,14 @@
 Thumbs.db
 desktop.ini
 
-# custom
+# dev
 build
+.cache
+compile_commands.json
+
+# custom
 *.log
 *.pid
 *.pdf
+*.zip
+*.rar
