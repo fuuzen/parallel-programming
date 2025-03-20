@@ -9,7 +9,7 @@ find_package(MKL REQUIRED)
 
 add_executable(test1 main.cpp ${LIB_SOURCES})
 target_include_directories(test1 PRIVATE ./lib)
-target_link_libraries(test1 PUBLIC MPI::MPI_CXX MKL::MKL)
+target_link_libraries(test1 PUBLIC MPI::MPI_CXX)
 target_compile_options(test1 PUBLIC -Ofast -DMETHOD1)
 
 add_executable(test2 main.cpp ${LIB_SOURCES})
