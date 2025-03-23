@@ -15,7 +15,7 @@ test4: build
 	./build/test4
 
 test5: build
-	./build/test5
+	taskset -c 0 ./build/test5
 
 clean:
 	if [ -d "build" ]; then rm -rf build; fi
