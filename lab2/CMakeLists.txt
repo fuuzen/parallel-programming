@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(lab1)
 set(CMAKE_CXX_STANDARD 20)
 
-file(GLOB_RECURSE LIB_SOURCES "lib/gemm.cpp" "lib/input.cpp")
+file(GLOB_RECURSE LIB_SOURCES "lib/gemm.cpp" "lib/input.cpp" "lib/MartixParams.cpp")
 
 find_package(MPI REQUIRED)
 find_package(MKL REQUIRED)

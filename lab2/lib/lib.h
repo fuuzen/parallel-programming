@@ -1,6 +1,21 @@
 #include "../main.h"
 
 /**
+ * 矩阵参数信息
+ */
+typedef struct {
+  int m;
+  int n;
+  int k;
+  int local_m;
+} MatrixParams;
+
+/**
+ * @brief 创建 MPI_Datatype MatrixParams
+ */
+MPI_Datatype create_matrix_params_type();
+
+/**
  * @brief 输入一个合法的整数
  * @param min 最小值
  * @param max 最大值
@@ -22,11 +37,13 @@ int input (int min, int max, int mod);
  * @param A 左乘矩阵，M x K
  * @param B 右乘矩阵，K x N
  * @param C 返回矩阵，M x N
+ * @param params 矩阵参数
  */
 void mkl_gemm (
   const double *A,
   const double *B,
-  double *C
+  double *C,
+  MatrixParams *params
 );
 
 /**
@@ -34,9 +51,11 @@ void mkl_gemm (
  * @param A 左乘矩阵，M x K
  * @param B 右乘矩阵，K x N
  * @param C 返回矩阵，M x N
+ * @param params 矩阵参数
  */
  void gemm (
   const double *A,
   const double *B,
-  double *C
+  double *C,
+  MatrixParams *params
 );
