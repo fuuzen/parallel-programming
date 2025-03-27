@@ -88,11 +88,15 @@ make dev
 # 只构建不测试
 make build
 
-# 运行测试，使用的单线程矩阵乘法为调整循环顺序且循环展开的版本
+# 运行单次测试，使用的单线程矩阵乘法为调整循环顺序且循环展开的版本
 make test1 NP=16
 
-# 运行测试，使用的单线程矩阵乘法为 Intel MKL 版本
+# 运行单次测试，使用的单线程矩阵乘法为 Intel MKL 版本
 make test2 NP=16
+
+# 运行表格上的全部测试，输出表格形式的结果
+make test1-all
+make test2-all
 
 # 清空已构建内容(build 目录)
 make clean

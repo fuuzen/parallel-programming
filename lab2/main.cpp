@@ -15,12 +15,16 @@ int main(){
   MatrixParams params;
 
   if (rank == 0) {
+    #ifdef INTERACTIVE
     cout << "[输入矩阵参数 M, 必须为当前进程数量的倍数]" << endl;
     params.m = input(128, 2048, size);
-    cout << "[输入矩阵参数 params.n]" << endl;
+    cout << "[输入矩阵参数 N]" << endl;
     params.n = input(128, 2048);
-    cout << "[输入矩阵参数 params.k]" << endl;
+    cout << "[输入矩阵参数 K]" << endl;
     params.k = input(128, 2048);
+    #else
+    cin >> params.m >> params.n >> params.k;
+    #endif
     params.local_m = params.m / size;  // 每个进程处理的行数，按 A 的行数 M 均等分
     
     // 同步参数
@@ -60,9 +64,8 @@ int main(){
     chrono::duration<double> elapsed = end_time - start_time;
   
     double flops = 2.0 * params.m * params.n * params.k / 1e9;
-    double gflops = flops / elapsed.count();
-  
-    cout << "Time: " << elapsed.count() << " s" << endl << "GFLOPS: " << gflops << endl;
+    
+    cout << scientific << setprecision(5) << elapsed.count() << endl;
 
     free(A);
     free(C);

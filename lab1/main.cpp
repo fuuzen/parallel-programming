@@ -16,12 +16,16 @@ int main(){
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   if (rank == 0) {
+    #ifdef INTERACTIVE
     cout << "[输入矩阵参数 M, 必须为当前进程数量的倍数]" << endl;
     M = input(128, 2048, size);
     cout << "[输入矩阵参数 N]" << endl;
     N = input(128, 2048);
     cout << "[输入矩阵参数 K]" << endl;
     K = input(128, 2048);
+    #else
+    cin >> M >> N >> K;
+    #endif
     local_M = M / size;  // 每个进程处理的行数，按 A 的行数 M 均等分
     
     // 同步参数
@@ -76,9 +80,8 @@ int main(){
     chrono::duration<double> elapsed = end_time - start_time;
   
     double flops = 2.0 * M * N * K / 1e9;
-    double gflops = flops / elapsed.count();
   
-    cout << "Time: " << elapsed.count() << " s" << endl << "GFLOPS: " << gflops << endl;
+    cout << scientific << setprecision(5) << elapsed.count() << endl;
 
     free(A);
     free(C);
