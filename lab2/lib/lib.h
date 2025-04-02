@@ -8,6 +8,9 @@ typedef struct {
   int n;
   int k;
   int local_m;
+  int block_m;
+  int block_n;
+  int block_k;
 } MatrixParams;
 
 /**
@@ -47,13 +50,27 @@ void mkl_gemm (
 );
 
 /**
- * 调整循环顺序并且循环展开的单线程 GEMM 实现
+ * @brief 调整循环顺序并且循环展开的单线程 GEMM 实现
  * @param A 左乘矩阵，M x K
  * @param B 右乘矩阵，K x N
  * @param C 返回矩阵，M x N
  * @param params 矩阵参数
  */
  void gemm (
+  const double *A,
+  const double *B,
+  double *C,
+  MatrixParams *params
+);
+
+/**
+ * @brief (Cannon 算法)调整循环顺序并且循环展开的单线程 GEMM 实现
+ * @param A 左乘矩阵，M x K
+ * @param B 右乘矩阵，K x N
+ * @param C 返回矩阵，M x N
+ * @param params 矩阵参数
+ */
+void gemm_cannon(
   const double *A,
   const double *B,
   double *C,
