@@ -1,7 +1,7 @@
-#include "lib.h"
+#include "main.h"
 
-void* gemm_thread(void *arg) {
-  ThreadArgs *args = (ThreadArgs*)arg;
+void* gemm(void *arg) {
+  GemmArgs *args = (GemmArgs*)arg;
   for (int i = args->start_row; i < args->end_row; ++i) {
     int k = 0;
     // 循环展开：每次处理4个k值
@@ -45,7 +45,7 @@ void* gemm_thread(void *arg) {
 }
 
 
-void gemm_thread(ThreadArgs *args) {
+void gemm(GemmArgs *args) {
   for (int i = args->start_row; i < args->end_row; ++i) {
     int k = 0;
     // 循环展开：每次处理4个k值

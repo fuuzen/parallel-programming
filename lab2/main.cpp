@@ -62,8 +62,6 @@ int main(){
 
     end_time = chrono::high_resolution_clock::now();
     chrono::duration<double> elapsed = end_time - start_time;
-  
-    double flops = 2.0 * params.m * params.n * params.k / 1e9;
     
     cout << scientific << setprecision(5) << elapsed.count() << endl;
 
