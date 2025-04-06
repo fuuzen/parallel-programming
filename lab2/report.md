@@ -141,19 +141,19 @@ make clean
 
 如下是固定时间开销随矩阵规模增加变化情况图，每条曲线代表一个固定进程数量：
 
-![time_matrix_size](images/time_matrix_size.png)
+<img src="images/time_matrix_size.png" alt="time_matrix_size" style="zoom:50%;" />
 
 可以看到随着矩阵规模增大，原本开销可能更大的多进程并行速度显著提升，并大幅超过较少进程的并行性能。
 
 如下是时间开销随并行进程数量增加变化情况图，每条曲线代表一个固定矩阵规模：
 
-![time_num_process](images/time_num_process.png)
+<img src="images/time_num_process.png" alt="time_num_process" style="zoom:50%;" />
 
 可以看到，对于较大的矩阵规模（大于 512），随着进程数量增加，时间开销减少。但是对于较小的矩阵规模（128 和 256），随着进程数量增加，时间开销出现“先减少后增加”的趋势，可能是因为进程数量不太多时，并行有效地提升了性能，但进程数量超过 4 之后，却又因为进程间通信开销增大，反而增大了总体时间开销。
 
 最后，我还和上一个实验的串行实现进行了性能对比。一开始我测试后和上一个实验的结果进行比较，发现几乎没有什么性能差别。但是我注意到我的编译参数一直使用 `-Ofast`，我猜测可能是编译器优化，上一个实验的点对点通信可能被编译器优化成集合通信。为了体现更加显著的差别，我修改编译参数为 `-O0` 完全禁用编译优化。在这个条件下，得到 lab1 和 lab2 对比时间开销随矩阵规模增加变化情况如下所示：(Group1 为 lab1 的实现，Group2 为 lab2 的按行划分实现)
 
-![lab1_lab2_contrast](images/lab1_lab2_contrast.png)
+<img src="images/lab1_lab2_contrast.png" alt="lab1_lab2_contrast" style="zoom:50%;" />
 
 可以看到每一个计算规模都有一定的提升，但并不是特别大幅度的提升，因为通信开销占比还是比较小，并且我所使用的集合 `MPI_Scatter`、`MPI_Bcast`、`MPI_Gather` 原理实际上就是逐个进行点对点通信，只是代码写出来更加简洁。
 
@@ -174,7 +174,7 @@ Cannon 算法将整体计算分解为 P 个阶段 (P 是网格维度)，每个�
 
 例如这是一个 $2\times 2$ 网格实现的 Cannon 算法过程示意图：
 
-![cannon](images/cannon.png)
+<img src="images/cannon.png" alt="cannon" style="zoom:50%;" />
 
 我的实现还较为简单，所以只考虑进程数量 $NP=P^2$ 为完全平方数，来将 $NP$ 个核构造上述所谓的“笛卡尔”方阵。测试性能结果如下所示：
 
@@ -186,7 +186,7 @@ Cannon 算法将整体计算分解为 P 个阶段 (P 是网格维度)，每个�
 
 对比原本的行划分算法实现，如下是时间开销随矩阵规模增加变化情况图，每条曲线代表一个固定进程数量：
 
-![origin_cannon_contrast](images/origin_cannon_contrast.png)
+<img src="images/origin_cannon_contrast.png" alt="origin_cannon_contrast" style="zoom:50%;" />
 
 可以看到 Cannon 算法具有显著的速度提升，进程数量为 4 时，性能就已经接近原本算法进程数量为 16 的性能。
 
@@ -194,6 +194,6 @@ Cannon 算法将整体计算分解为 P 个阶段 (P 是网格维度)，每个�
 
 此外，为了验证计算正确性，我增加了编译参数 `VERIFY`，定义该参数下会将并行计算结果和串行计算结果对比检查，并输出矩阵对比情况为 `diff` 文件，`*` 符号表示对比无误，`X` 符号表示出错。通过 `mpirun -np 4 ./build/cannon-verify 128 128 128` 可以进行测试。我的 Cannon 算法在 4 个进程的情况下计算全部无误，但是在 16 个进程情况下，发现有一半计算出错，并且出错分布如下：
 
-![diff](images/diff.png)
+<img src="images/diff.png" alt="diff" style="zoom:20%;" />
 
 可以看出来是 16 个分块有一半计算错误，并且错误都是以一整块为单位交错出现，具体原因暂未弄清楚，代码可能还是有问题。但是基本不影响开销的计算或性能的比较。
