@@ -89,7 +89,7 @@ make test2  # 并行数组求和
 make clean
 ```
 
-使用 jupyter notebook 脚本 `draw.ipynb` 根据 `make test1-all` 或 `make test2-all` 输出的结果 (`build/result.md`) 画图，直观展示性能变化情况。实验报告中的曲线图均由该脚本生成。
+使用 jupyter notebook 脚本 `draw.ipynb` 根据 `make test1` 或 `make test2` 输出的结果 (`build/result.md`) 画图，直观展示性能变化情况。实验报告中的曲线图均由该脚本生成。
 
 # 并行矩阵乘法
 

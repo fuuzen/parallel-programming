@@ -1,7 +1,7 @@
 #include "main.h"
 #include "lib/lib.h"
 
-int main(){
+int main(int argc, char *argv[]){
   chrono::time_point<chrono::high_resolution_clock> start_time, end_time;
 
   int rank, size;
@@ -15,16 +15,13 @@ int main(){
   MatrixParams params;
 
   if (rank == 0) {
-    #ifdef INTERACTIVE
-    cout << "[输入矩阵参数 M, 必须为当前进程数量的倍数]" << endl;
-    params.m = input(128, 2048, size);
-    cout << "[输入矩阵参数 N]" << endl;
-    params.n = input(128, 2048);
-    cout << "[输入矩阵参数 K]" << endl;
-    params.k = input(128, 2048);
-    #else
-    cin >> params.m >> params.n >> params.k;
-    #endif
+    if (argc != 4) {
+      printf("用法: %s m n k\n", argv[0]);
+      return 1;
+    }
+    params.m = atoi(argv[1]);
+    params.n = atoi(argv[2]);
+    params.k = atoi(argv[3]);
     params.local_m = params.m / size;  // 每个进程处理的行数，按 A 的行数 M 均等分
     
     // 同步参数
@@ -64,6 +61,13 @@ int main(){
     chrono::duration<double> elapsed = end_time - start_time;
     
     cout << scientific << setprecision(5) << elapsed.count() << endl;
+
+    #ifdef VERIFY
+    double* C_serial = (double*)malloc(params.m * params.n * sizeof(double));
+    serial_matrix_mult(A, local_B, C_serial, params.m, params.k, params.n);
+    cout << verify_results(C, C_serial, params.m, params.n) << endl;
+    free(C_serial);
+    #endif
 
     free(A);
     free(C);

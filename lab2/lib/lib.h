@@ -76,3 +76,7 @@ void gemm_cannon(
   double *C,
   MatrixParams *params
 );
+
+void serial_matrix_mult(double *A, double *B, double *C_serial, int m, int n, int k);
+
+int verify_results(double *C_parallel, double *C_serial, int m, int k);

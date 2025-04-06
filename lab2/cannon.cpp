@@ -1,7 +1,9 @@
 #include "main.h"
 #include "lib/lib.h"
 
-int main(){
+
+
+int main(int argc, char *argv[]){
   chrono::time_point<chrono::high_resolution_clock> start_time, end_time;
 
   int rank, size;
@@ -25,16 +27,13 @@ int main(){
   }
 
   if (rank == 0) {
-    #ifdef INTERACTIVE
-    cout << "[输入矩阵参数 M, 必须为当前进程数量的倍数]" << endl;
-    params.m = input(128, 2048, size);
-    cout << "[输入矩阵参数 N]" << endl;
-    params.n = input(128, 2048);
-    cout << "[输入矩阵参数 K]" << endl;
-    params.k = input(128, 2048);
-    #else
-    cin >> params.m >> params.n >> params.k;
-    #endif
+    if (argc != 4) {
+      printf("用法: %s m n k\n", argv[0]);
+      return 1;
+    }
+    params.m = atoi(argv[1]);
+    params.n = atoi(argv[2]);
+    params.k = atoi(argv[3]);
     
     // 检查矩阵维度是否可以被grid_size整除
     if (params.m % grid_size != 0 || params.n % grid_size != 0 || params.k % grid_size != 0) {
@@ -42,7 +41,7 @@ int main(){
       MPI_Abort(MPI_COMM_WORLD, 1);
     }
   }
-  
+
   // 广播参数
   MPI_Bcast(&params, 1, mpi_matrix_params_type, 0, MPI_COMM_WORLD);
 
@@ -77,12 +76,13 @@ int main(){
 
     // 开始计时
     start_time = chrono::high_resolution_clock::now();
-  }
-  
-  // 分发矩阵块
-  if (rank == 0) {
+
+    // 分发矩阵块
     for (int m = 0; m < params.block_m; m++) {
       memcpy(local_A + m * params.block_k, A + m * params.k, params.block_k * sizeof(double));
+    }
+    for (int k = 0; k < params.block_k; k++) {
+      memcpy(local_B + k * params.block_n, B + k * params.n, params.block_k * sizeof(double));
     }
     for (int i = 0; i < grid_size; i++) {
       for (int j = 0; j < grid_size; j++) {
@@ -91,10 +91,10 @@ int main(){
         int proc_coords[2] = {i, j};
         MPI_Cart_rank(grid_comm, proc_coords, &proc_rank);
         for (int m = 0; m < params.block_m; m++) {
-          MPI_Send(A + (i + m) * params.k + j * params.block_k, params.block_k, MPI_DOUBLE, proc_rank, 0, grid_comm);
+          MPI_Send(A + (i * params.block_m + m) * params.k + j * params.block_k, params.block_k, MPI_DOUBLE, proc_rank, 0, grid_comm);
         }
         for (int k = 0; k < params.block_k; k++) {
-          MPI_Send(B + (i + k) * params.n + j * params.block_n, params.block_n, MPI_DOUBLE, proc_rank, 0, grid_comm);
+          MPI_Send(B + (i * params.block_k + k) * params.n + j * params.block_n, params.block_n, MPI_DOUBLE, proc_rank, 1, grid_comm);
         }
       }
     }
@@ -103,34 +103,32 @@ int main(){
       MPI_Recv(local_A + m * params.block_k, params.block_k, MPI_DOUBLE, 0, 0, grid_comm, MPI_STATUS_IGNORE);
     }
     for (int k = 0; k < params.block_k; k++) {
-      MPI_Recv(local_A + k * params.block_k, params.block_n, MPI_DOUBLE, 0, 0, grid_comm, MPI_STATUS_IGNORE);
+      MPI_Recv(local_B + k * params.block_n, params.block_n, MPI_DOUBLE, 0, 1, grid_comm, MPI_STATUS_IGNORE);
     }
   }
 
   // 初始对齐
   int left, right, up, down;
-  MPI_Cart_shift(grid_comm, 1, -my_row, &left, &right);  // 水平方向
-  MPI_Cart_shift(grid_comm, 0, -my_col, &up, &down);     // 垂直方向
-  
+  MPI_Cart_shift(grid_comm, 1, -my_row, &left, &right);
   MPI_Sendrecv_replace(local_A, params.block_m * params.block_k, MPI_DOUBLE, left, 0, right, 0, grid_comm, MPI_STATUS_IGNORE);
-  
+  MPI_Cart_shift(grid_comm, 0, -my_col, &up, &down);
   MPI_Sendrecv_replace(local_B, params.block_k * params.block_n, MPI_DOUBLE, up, 0, down, 0, grid_comm, MPI_STATUS_IGNORE);
 
   // 主循环
   for (int step = 0; step < grid_size; step++) {
     // 本地矩阵乘法
     gemm_cannon(local_A, local_B, local_C, &params);
-    
     // 循环移位 A (向左)
+    MPI_Cart_shift(grid_comm, 1, -1, &left, &right);
     MPI_Sendrecv_replace(local_A, params.block_m * params.block_k, MPI_DOUBLE,left, 0, right, 0, grid_comm, MPI_STATUS_IGNORE);
-    
     // 循环移位 B (向上)
+    MPI_Cart_shift(grid_comm, 0, -1, &up, &down);
     MPI_Sendrecv_replace(local_B, params.block_k * params.block_n, MPI_DOUBLE,up, 0, down, 0, grid_comm, MPI_STATUS_IGNORE);
   }
 
   // 收集结果
   if (rank == 0) {
-    double* C = (double*)malloc(params.m * params.n * sizeof(double));;
+    double* C = (double*)malloc(params.m * params.n * sizeof(double));
 
     for (int m = 0; m < params.block_m; m++) {
       memcpy(C + m * params.n, local_C + m * params.block_n, params.block_n * sizeof(double));
@@ -142,7 +140,7 @@ int main(){
         int proc_coords[2] = {i, j};
         MPI_Cart_rank(grid_comm, proc_coords, &proc_rank);
         for (int m = 0; m < params.block_m; m++) {
-          MPI_Recv(C + (i + m) * params.n + j, params.block_n, MPI_DOUBLE, proc_rank, 0, grid_comm, MPI_STATUS_IGNORE);
+          MPI_Recv(C + (i * params.block_m + m) * params.n + j * params.block_n, params.block_n, MPI_DOUBLE, proc_rank, 0, grid_comm, MPI_STATUS_IGNORE);
         }
       }
     }
@@ -152,7 +150,14 @@ int main(){
     chrono::duration<double> elapsed = end_time - start_time;
     
     cout << scientific << setprecision(5) << elapsed.count() << endl;
-    
+
+    #ifdef VERIFY
+    double* C_serial = (double*)malloc(params.m * params.n * sizeof(double));
+    serial_matrix_mult(A, B, C_serial, params.m, params.k, params.n);
+    cout << verify_results(C, C_serial, params.m, params.n) << endl;
+    free(C_serial);
+    #endif
+
     free(A);
     free(B);
     free(C);
