@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     printf("用法: %s n num_threads \n", argv[0]);
     return 1;
   }
-  N = atoi(argv[1]);
+  N = std::stod(argv[1]);
   num_threads = atoi(argv[2]);
 
   // 初始化互斥锁
