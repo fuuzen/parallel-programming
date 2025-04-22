@@ -43,11 +43,12 @@
       </tr>
       <tr style="font-weight:normal;"> 
             <td style="width:20%;text-align:center;">报告时间</td>
-            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">2025年04月16日</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">2025年04月22日</td>
       </tr>
     </tbody>              
     </table>
 </div>
+
 
 <!-- 注释语句：导出PDF时会在这里分页，使用 Typora Newsprint 主题放大 125% -->
 
@@ -75,15 +76,15 @@ make dev
 # 只构建不测试
 make build
 
-# 运行单次测试
-./build/test1  # 
-./build/test2  # 
+# 运行全部测试
+./build/test1  # 基于 OpenMP 的通用矩阵乘法
+./build/test2  # 基于 Pthreads 的模拟 OpenMP 机制的通用矩阵乘法
 
 # 清空已构建内容(build 目录)
 make clean
 ```
 
-使用 jupyter notebook 脚本 `draw.ipynb` 根据 `make test2` 输出的结果 (`build/result.md`) 画图，直观展示蒙特卡洛计算结果的变化情况。实验报告中的曲线图由该脚本生成。
+使用 jupyter notebook 脚本 `draw.ipynb` 根据 `make test1` 和 `make test2`输出的结果 (`build/result.md`) 画图，直观展示测试结果随相关参数的变化情况。实验报告中的曲线图由该脚本生成。
 
 # 1. OpenMP通用矩阵乘法
 
@@ -122,7 +123,10 @@ make clean
 
 测试得到数据画图如下：
 
-<!-- IMAGE -->
+<div style="text-align: center;">
+  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-matrix_size.1.png" alt="time-matrix_size.1" style="zoom:30%;" />
+  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-num_threads.1.png" alt="time-num_threads.1" style="zoom:30%;" />
+</div>
 
 可以看到 16 线程并行计算的时间基本比单线程少了 10 倍的数量级，并行加速了 10 倍左右，符合预期的并行加速效果。
 
@@ -147,7 +151,10 @@ make clean
 
 但是这样测试得到的性能结果就会发现并行提升变得不再显著。如下所示：
 
-<!-- IMAGE -->
+<div style="text-align: center;">
+  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-matrix_size.2.png" alt="time-matrix_size.2" style="zoom:30%;" />
+  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-num_threads.2.png" alt="time-num_threads.2" style="zoom:30%;" />
+</div>
 
 
 
@@ -390,8 +397,19 @@ void* functor(int i, void *arg) {
 }
 ```
 
-测试结果和先前 OpenMP 实现的程序作对比如下：
+测试结果如下：
 
-<!-- IMG -->
+<div style="text-align: center;">
+  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-matrix_size.3.png" alt="time-matrix_size.3" style="zoom:30%;" />
+  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-num_threads.3.png" alt="time-num_threads.3" style="zoom:30%;" />
+</div>
+
+可以看到 16 线程并行计算的时间基本比单线程少了 10 倍的数量级，并行加速了 10 倍左右，符合预期的并行加速效果。
+
+和先前 OpenMP 实现的程序作对比如下：
+
+<div style="text-align: center;">
+  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/comparison.png" alt="comparison" style="zoom:30%;" />
+</div>
 
 可以看到 pthread 实现的模拟 OpenMP 和实际的 OpenMP 在矩阵乘法计算表现的性能已经非常接近。
