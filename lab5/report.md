@@ -77,6 +77,10 @@ make dev
 make build
 
 # 运行全部测试
+make test1  # 基于 OpenMP 的通用矩阵乘法
+make test2  # 基于 Pthreads 的模拟 OpenMP 机制的通用矩阵乘法
+
+# 单独运行程序
 ./build/test1  # 基于 OpenMP 的通用矩阵乘法
 ./build/test2  # 基于 Pthreads 的模拟 OpenMP 机制的通用矩阵乘法
 
@@ -124,8 +128,8 @@ make clean
 测试得到数据画图如下：
 
 <div style="text-align: center;">
-  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-matrix_size.1.png" alt="time-matrix_size.1" style="zoom:30%;" />
-  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-num_threads.1.png" alt="time-num_threads.1" style="zoom:30%;" />
+  <img src="images/time-matrix_size.1.png" alt="time-matrix_size.1" style="zoom:30%;" />
+  <img src="images/time-num_threads.1.png" alt="time-num_threads.1" style="zoom:30%;" />
 </div>
 
 可以看到 16 线程并行计算的时间基本比单线程少了 10 倍的数量级，并行加速了 10 倍左右，符合预期的并行加速效果。
@@ -152,8 +156,8 @@ make clean
 但是这样测试得到的性能结果就会发现并行提升变得不再显著。如下所示：
 
 <div style="text-align: center;">
-  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-matrix_size.2.png" alt="time-matrix_size.2" style="zoom:30%;" />
-  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-num_threads.2.png" alt="time-num_threads.2" style="zoom:30%;" />
+  <img src="images/time-matrix_size.2.png" alt="time-matrix_size.2" style="zoom:30%;" />
+  <img src="images/time-num_threads.2.png" alt="time-num_threads.2" style="zoom:30%;" />
 </div>
 
 
@@ -400,8 +404,8 @@ void* functor(int i, void *arg) {
 测试结果如下：
 
 <div style="text-align: center;">
-  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-matrix_size.3.png" alt="time-matrix_size.3" style="zoom:30%;" />
-  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/time-num_threads.3.png" alt="time-num_threads.3" style="zoom:30%;" />
+  <img src="images/time-matrix_size.3.png" alt="time-matrix_size.3" style="zoom:30%;" />
+  <img src="images/time-num_threads.3.png" alt="time-num_threads.3" style="zoom:30%;" />
 </div>
 
 可以看到 16 线程并行计算的时间基本比单线程少了 10 倍的数量级，并行加速了 10 倍左右，符合预期的并行加速效果。
@@ -409,7 +413,7 @@ void* functor(int i, void *arg) {
 和先前 OpenMP 实现的程序作对比如下：
 
 <div style="text-align: center;">
-  <img src="/Users/minamoto/Desktop/parallel-programming/lab5/images/comparison.png" alt="comparison" style="zoom:30%;" />
+  <img src="images/comparison.png" alt="comparison" style="zoom:30%;" />
 </div>
 
 可以看到 pthread 实现的模拟 OpenMP 和实际的 OpenMP 在矩阵乘法计算表现的性能已经非常接近。
