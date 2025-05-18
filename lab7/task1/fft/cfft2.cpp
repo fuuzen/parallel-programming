@@ -56,6 +56,9 @@ void cfft2 ( int n, double x[], double y[], double w[], double sgn )
   double *x_local;
   double *y_local;
   double *buf;
+  double *a;
+  double *b;
+  double *c;
   int *idx;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -91,7 +94,7 @@ void cfft2 ( int n, double x[], double y[], double w[], double sgn )
     {
       for ( int j = 0; j < np; ++j)
       {
-        MPI_Send(x+idx[i*np+j]*2, 2, MPI_DOUBLE, i, j, MPI_COMM_WORLD);
+        MPI_Send(x+idx[i*np+j]*2, 2, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
       }
     }
 
@@ -101,69 +104,62 @@ void cfft2 ( int n, double x[], double y[], double w[], double sgn )
   {
     for ( int j = 0; j < np; ++j)
     {
-      MPI_Recv(x_local, 2, MPI_DOUBLE, 0, j, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(x_local+j*2, 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
   }
 
   m = ( int ) ( log ( ( double ) n ) / log ( 1.99 ) );
-  mj = 1;
-  mj2 = 2;
+  mj2 = 1;
 //
 //  Toggling switch for work array.
 //
-  tgle = 1;
-  step ( n, mj, x, buf, y, w, sgn, p, rank );
+  tgle = 0;
 
-  if ( n == 2 )
+  for ( j = 0; j < m; j++ )
   {
-    return;
-  }
-
-  for ( j = 0; j < m - 2; j++ )
-  {
+    MPI_Barrier(MPI_COMM_WORLD);
     mj = mj2;
     mj2 = mj2 * 2;
     
-    if ( mj2 > np ) {
-      if ( ( rank * np ) % mj2 <= mj )
-      {
-        rk = rank + mj / np;
-        MPI_Send(tgle ? y_local : x_local, 2*np, MPI_DOUBLE, rk, rank, MPI_COMM_WORLD);
-        MPI_Recv(buf, 2*np, MPI_DOUBLE, rk, rk, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }
-      else
-      {
-        rk = rank - mj / np;
-        MPI_Recv(buf, 2*np, MPI_DOUBLE, rk, rk, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Send(tgle ? y_local : x_local, 2*np, MPI_DOUBLE, rk, rank, MPI_COMM_WORLD);
-      }
+    if ( mj2 <= np )  // scene 1
+    {
+      a = tgle ? y_local : x_local;
+      b = nullptr;
+      c = tgle ? x_local : y_local;
     }
+    else if ( ( rank * np ) % mj2 < mj )  // scene 2
+    {
+      rk = rank + mj / np;
+      a = tgle ? y_local : x_local;
+      b = buf;
+      c = tgle ? x_local : y_local;
 
-    if ( tgle )
-    {
-      step ( n, mj, y_local, buf, x_local, w, sgn, p, rank );
-      tgle = 0;
+      MPI_Send(a, 2*np, MPI_DOUBLE, rk, rank, MPI_COMM_WORLD);
+      MPI_Recv(b, 2*np, MPI_DOUBLE, rk, rk, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-    else
+    else  // scene 3
     {
-      step ( n, mj, x_local, buf, y_local, w, sgn, p, rank );
-      tgle = 1;
+      rk = rank - mj / np;
+      a = buf;
+      b = tgle ? y_local : x_local;
+      c = tgle ? x_local : y_local;
+
+      MPI_Recv(a, 2*np, MPI_DOUBLE, rk, rk, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(b, 2*np, MPI_DOUBLE, rk, rank, MPI_COMM_WORLD);
     }
-  }
-//
-//  Last pass thru data: move y to x if needed 
-//
-  if ( tgle ) 
-  {
-    ccopy ( n/p, y_local, x_local );
+    
+    step ( n, mj, a, b, c, w, sgn, np, rank );
+
+    tgle = tgle ? 0 : 1;
   }
 
-  mj = n / 2;
-  step ( n, mj, x_local, buf, y_local, w, sgn, p, rank );
-  
-  MPI_Gather(x_local, 2 * n / p, MPI_DOUBLE, x, 2 * n / p, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gather(tgle ? y_local : x_local, 2 * np, MPI_DOUBLE, y, 2 * np, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  // MPI_Barrier(MPI_COMM_WORLD);
+  // printf("%d finish\n", rank);
+  // MPI_Barrier(MPI_COMM_WORLD);
 
   delete [] x_local;
   delete [] y_local;
+  delete [] buf;
   return;
 }

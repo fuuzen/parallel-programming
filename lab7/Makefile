@@ -25,7 +25,7 @@ clean:
 	@echo "Cleaning build directories..."
 	@rm -rf build-debug build-release
 
-test: release
+task2: release
 	@echo "Running tests..."
 	@echo "|    |      64     |     128     |     256     |     512     |     1024    |" > ./build-release/result.md
 	@echo "|----|-------------|-------------|-------------|-------------|-------------|" >> ./build-release/result.md
@@ -38,20 +38,3 @@ test: release
 	done
 	@clear
 	@cat ./build-release/result.md
-
-test-omp: release
-	@echo "Running OpenMP Version tests..."
-	@echo "|    |      64     |     128     |     256     |     512     |     1024    |" > ./build-release/result-omp.md
-	@echo "|----|-------------|-------------|-------------|-------------|-------------|" >> ./build-release/result-omp.md
-	@for threads in 1 2 4 8 16; do \
-		printf "| %2d | $$( \
-			for grid in 64 128 256 512 1024; do \
-			  echo "# define M $$grid\n# define N $$grid\n# define NUM_THREADS $$threads" > omp_ver/heated_plate_openmp.h; \
-				make update > /dev/null; \
-				./build-release/omp_ver | grep "Wallclock time" | awk '{print $$4}'; \
-			done | tr '\n' '|' | sed 's/|/ | /g' \
-		)\n" $$threads >> ./build-release/result-omp.md; \
-	done
-	@clear
-	@cat ./build-release/result-omp.md
-

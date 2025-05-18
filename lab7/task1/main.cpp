@@ -42,6 +42,8 @@ int main ( )
 //    LC: QA76.58.P47.
 //
 {
+  int nits = 10000;
+  int ln2lim = 20;
   double ctime;
   double ctime1;
   double ctime2;
@@ -55,7 +57,6 @@ int main ( )
   int ln2;
   double mflops;
   int n;
-  int nits = 10000;
   static double seed;
   double sgn;
   double *w;
@@ -94,9 +95,9 @@ int main ( )
 //
 //  LN2 is the log base 2 of N.  Each increase of LN2 doubles N.
 //
-  n = 1;
+  n = size / 2;
 
-  for ( ln2 = 1; ln2 <= 20; ln2++ )
+  for ( ln2 = 1; ln2 <= ln2lim; ln2++ )
   {
     n = 2 * n;
 //
@@ -108,13 +109,11 @@ int main ( )
 //
     if ( rank == 0 )
     {
-      w = new double[  n];
       x = new double[2*n];
       y = new double[2*n];
       z = new double[2*n];
     }
-
-    MPI_Bcast(w, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    w = new double[  n];
 
     first = 1;
 
@@ -155,17 +154,20 @@ int main ( )
 //  Initialize the sine and cosine tables.
 //
       cffti ( n, w );
+      MPI_Barrier(MPI_COMM_WORLD);
 //
 //  Transform forward, back 
 //
       if ( first )
-      {        sgn = + 1.0;
+      {
+        sgn = + 1.0;
         cfft2 ( n, x, y, w, sgn );
         sgn = - 1.0;
         cfft2 ( n, y, x, w, sgn );
 // 
 //  Results should be same as initial multiplied by N.
 //
+        MPI_Barrier(MPI_COMM_WORLD);
         if ( rank == 0 )
         {
           fnm1 = 1.0 / ( double ) n;
@@ -180,8 +182,9 @@ int main ( )
           cout << "  " << setw(12) << n
               << "  " << setw(8) << nits
               << "  " << setw(12) << error;
-          first = 0;
         }
+        
+        first = 0;
       }
       else
       {
@@ -216,17 +219,25 @@ int main ( )
     {
       nits = 1;
     }
+
+    if ( rank == 0 )
+    {
+      delete [] x;
+      delete [] y;
+      delete [] z;
+    }
     delete [] w;
-    delete [] x;
-    delete [] y;
-    delete [] z;
   }
 
-  cout << "\n";
-  cout << "FFT_PARALLEL:\n";
-  cout << "  Normal end of execution.\n";
-  cout << "\n";
-  timestamp ( );
-
+  if ( rank == 0 )
+  {
+    cout << "\n";
+    cout << "FFT_PARALLEL:\n";
+    cout << "  Normal end of execution.\n";
+    cout << "\n";
+    timestamp ( );
+  }
+  
+  MPI_Finalize();
   return 0;
 }

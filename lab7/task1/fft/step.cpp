@@ -34,20 +34,22 @@ void step ( int n, int mj, double a[], double b[], double c[], double w[], doubl
   int k;
   int lj;
   int mj2;
+  double ambr;
+  double ambu;
   double wjw[2];
 
   mj2 = 2 * mj;
 
-  if ( mj2 <= np )
+  if ( mj2 <= np )  // scene 1
   {
     lj = np / mj2;
     
     for ( j = 0; j < lj; j++ )
     {
+      jmj2 = j * mj2;
+
       for ( k = 0; k < mj; k++ )
       {
-        jmj2 = j * mj2;
-
         wjw[0] = w[(n/mj2)*k*2+0];
         wjw[1] = w[(n/mj2)*k*2+1];
 
@@ -56,35 +58,52 @@ void step ( int n, int mj, double a[], double b[], double c[], double w[], doubl
           wjw[1] = - wjw[1];
         }
 
-        c[(jmj2+k)*2+0] = a[(jmj2+k)*2+0] + a[(jmj2+mj+k)*2+0];
-        c[(jmj2+k)*2+1] = a[(jmj2+k)*2+1] + a[(jmj2+mj+k)*2+1];
-        c[(jmj2+mj+k)*2+0] = a[(jmj2+k)*2+0] - (wjw[0] * a[(jmj2+mj+k)*2+0] - wjw[1] * a[(jmj2+mj+k)*2+1]);
-        c[(jmj2+mj+k)*2+1] = a[(jmj2+k)*2+1] - (wjw[1] * a[(jmj2+mj+k)*2+0] + wjw[0] * a[(jmj2+mj+k)*2+1]);
+        ambr = wjw[0] * a[(jmj2+mj+k)*2+0] - wjw[1] * a[(jmj2+mj+k)*2+1];
+        ambu = wjw[1] * a[(jmj2+mj+k)*2+0] + wjw[0] * a[(jmj2+mj+k)*2+1];
+
+        c[(jmj2   +k)*2+0] = a[(jmj2+k)*2+0] + ambr;
+        c[(jmj2   +k)*2+1] = a[(jmj2+k)*2+1] + ambu;
+        c[(jmj2+mj+k)*2+0] = a[(jmj2+k)*2+0] - ambr;
+        c[(jmj2+mj+k)*2+1] = a[(jmj2+k)*2+1] - ambu;
       }
     }
   }
-  else if ( (rank * np) % mj2 <= mj )
+  else if ( (rank * np) % mj2 < mj )  // scene 2
   {
     for ( k = 0; k < np; k++ )
     {
-      c[k*2+0] = a[k*2+0] + b[k*2+0];
-      c[k*2+1] = a[k*2+1] + b[k*2+1];
+      wjw[0] = w[(n / mj2) * ((rank * np) % mj + k)*2+0];
+      wjw[1] = w[(n / mj2) * ((rank * np) % mj + k)*2+1];
+
+      if ( sgn < 0.0 ) 
+      {
+        wjw[1] = - wjw[1];
+      }
+      
+      ambr = wjw[0] * b[k*2+0] - wjw[1] * b[k*2+1];
+      ambu = wjw[1] * b[k*2+0] + wjw[0] * b[k*2+1];
+      
+      c[k*2+0] = a[k*2+0] + ambr;
+      c[k*2+1] = a[k*2+1] + ambu;
     }
   }
-  else
+  else  // scene 3
   {
     for ( k = 0; k < np; k++ )
     {
-      wjw[0] = w[(n/mj2)*k*2+0];
-      wjw[1] = w[(n/mj2)*k*2+1];
+      wjw[0] = w[(n / mj2) * ((rank * np) % mj + k)*2+0];
+      wjw[1] = w[(n / mj2) * ((rank * np) % mj + k)*2+1];
 
       if ( sgn < 0.0 ) 
       {
         wjw[1] = - wjw[1];
       }
 
-      c[k*2+0] = a[k*2+0] - (wjw[0] * b[k*2+0] - wjw[1] * b[k*2+0]);
-      c[k*2+1] = a[k*2+1] - (wjw[1] * b[k*2+0] + wjw[0] * b[k*2+0]);
+      ambr = wjw[0] * b[k*2+0] - wjw[1] * b[k*2+1];
+      ambu = wjw[1] * b[k*2+0] + wjw[0] * b[k*2+1];
+
+      c[k*2+0] = a[k*2+0] - ambr;
+      c[k*2+1] = a[k*2+1] - ambu;
     }
   }
   
