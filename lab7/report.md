@@ -56,16 +56,13 @@
 
 # 实验环境
 
-我的测试平台处理器是 Intel Xeon E7 处理器，单槽 16 核，Intel 给出的性能信息如下：
+我的测试平台处理器是 Intel Xeon E7 处理器，单槽 20 核，Intel 给出的性能信息如下：
 
 | Processor Group                                              | GFLOPS | APP     |
 | ------------------------------------------------------------ | ------ | ------- |
 | Intel® Xeon® Processor E7-4830 v3 (30M Cache, 2.10 GHz) E7-4830V3 | 403.2  | 0.12096 |
 
 # 代码介绍
-
-- `lib` 目录下为 `parallel_for` 和相关辅助代码的实现。
-- `src` 目录下为 heated plate 问题的模拟程序实现。
 
 `Makefile` 中定义了开发、构建、测试，使用如下：
 
@@ -106,15 +103,15 @@ make clean
 
 一开始我尝试对给出的参考串行化实现 FFT 进行并行化改造,但仔细研究其代码逻辑,发现它的实现似乎不太方便并行化，假设 $n=8$, 8 个点从 x 到 y 的计算逻辑大致如下图所示:
 
-![serial](./images/serial.png)
+<img src="./images/serial.png" alt="serial" style="zoom: 33%;" />
 
 这和 Binary Exchange 方法并行化的计算逻辑完全不同，除了最后一轮之外每一个进程都要和另外好几个进程通信。因此我的实现重写了计算逻辑，同样假设 $n=8$, 8 个点从 x 到 y 的计算逻辑大致如下图所示:
 
-![serial](./images/binary_exchange.png)
+<img src="./images/binary_exchange.png" alt="serial" style="zoom:50%;" />
 
 可以看到图中出现了很多标准的 "X" 形状，这就带来了进程通信的方便，使得每一轮进行数据交换时，每一个进程只需要和另一个进程交换数据。这就是标准的 Binary Exchange 实现的并行化 FFT。算法中，初始分配给所有进程的 x 点的顺序不太一样，这是 FFT 的算法递归处理的原因，每一次递归为 2 个子问题时，下标为偶数的将被映射到自己本身下标的 $\frac{1}{2}$ 处，下表为奇数时被映射到数组后半段的 $\frac{\text{下标}-1}{2}$ 处，将排列后的数据分为前后两个部分，递归次过程，直到只有两个元素，也就是可以直接计算的 n=2 的 FFT 子问题，则停止。以 $n=16$ 为例，上述过程递归 4 次，直观图解大致如下：
 
-![serial](./images/binary_exchange2.png)
+<img src="./images/binary_exchange2.png" alt="serial" style="zoom:50%;" />
 
 我的数据都有 0 号进程产生，我在 `cfft` 函数一开始让 0 号进程中通过同样的递归方法计算这如上的下标的映射，并按照映射后的 `x` 分配给所有进程，所有进程只存储 $np=\frac{n}{p}$ 个点，存储在 `x_local` 中，代码如下：
 
@@ -319,17 +316,17 @@ else  // scene 3
 
 4 个进程计算结果如下：
 
-![4](./images/4.png)
+<img src="./images/4.png" alt="4" style="zoom:50%;" />
 
 8 个进程计算结果如下：
 
-![8](./images/8.png)
+<img src="./images/8.png" alt="8" style="zoom:50%;" />
 
 16 个进程计算结果如下：
 
-![16](./images/16.png)
+<img src="./images/16.png" alt="16" style="zoom: 50%;" />
 
-可以看到随着 n 的增大， MFLOPS 不断增大，说明成功并行化了 FFT 计算任务。
+可以看到随着 n 的增大， MFLOPS 不断增大，说明成功并行化了 FFT 计算任务。但是，MFLOPS 也出现了随着 n 增大而先增大到峰值，然后又下降的现象，猜测可能是 n 过于大导致进程间通信需要交换的数据量也增大，并且超过了并行所能带来的性能优化。
 
 # 2. parallel_for 并行应用分析
 
@@ -358,7 +355,7 @@ valgrind --tool=massif --stacks=yes ./build-release/task2 256 256 16
 
 打印出统计图如下：
 
-![task2](./images/task2.png)
+<img src="./images/task2.png" alt="task2" style="zoom:50%;" />
 
 结合统计图和分析输出的 `massif.out.xxx` 文件，可以发现随着时间推移，堆内存和栈内存都呈现稳定增长趋势，最终峰值时：
 - 堆内存：8.5MB
