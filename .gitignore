@@ -24,3 +24,5 @@ compile_commands.json
 *.pdf
 *.zip
 *.rar
+massif.out*
+input*
