@@ -17,6 +17,10 @@ desktop.ini
 build*
 .cache
 compile_commands.json
+.clangd
+*.exe
+*.exp
+*.lib
 
 # custom
 *.log
