@@ -2,11 +2,20 @@
 
 all: debug
 
-build:
+dev:
+	@if [ ! -d "build-debug" ]; then mkdir build-debug; fi
+	@cd build-debug && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
+	@mv build-debug/compile_commands.json .
+
+debug:
+	@echo "Building Debug version..."
+	@if [ ! -d "build-debug" ]; then mkdir build-debug; fi
+	@cd build-debug && cmake -DCMAKE_BUILD_TYPE=Debug .. && make -j8
+
+release:
 	@echo "Building Release version..."
-	@if [ ! -d "build" ]; then mkdir build; fi
-	@nvcc -o build/task1 task1/main.cu
-	@nvcc -o build/task2 task2/main.cu
+	@if [ ! -d "build-release" ]; then mkdir build-release; fi
+	@cd build-release && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j8
 
 clean:
 	@echo "Cleaning build directories..."
@@ -14,14 +23,26 @@ clean:
 
 test: release
 	@echo "Running tests..."
-	@echo "|    |     930     |     525     |" > ./build-release/result.md
-	@echo "|----|-------------|-------------|" >> ./build-release/result.md
-	@for threads in 1 2 4 8 16; do \
-		printf "| %2d | \
-$$(printf '0 0' | ./build-release/task1 $$threads ./data/updated_flower.csv | head -n 1 ) | \
-$$(printf '0 0' | ./build-release/task1 $$threads ./data/updated_mouse.csv | head -n 1 ) |\n" \
-		$$threads \
-		>> ./build-release/result.md; \
+	@echo "|    |     128     |     256     |     512     |    1024     |    2048     |" > ./build-release/result_global.md
+	@echo "|----|-------------|-------------|-------------|-------------|-------------|" >> ./build-release/result_global.md
+	@for tile_size in 1 2 4 8 16 32; do \
+		printf "| %2d | $$( \
+			for n in 128 256 512 1024 2048; do \
+				./build-release/task2 $$n $$tile_size G; \
+			done | tr '\n' '|' | sed 's/|/ | /g' \
+		)\n" $$tile_size >> ./build-release/result_global.md; \
+	done
+	@echo "|    |     128     |     256     |     512     |    1024     |    2048     |" > ./build-release/result_shared.md
+	@echo "|----|-------------|-------------|-------------|-------------|-------------|" >> ./build-release/result_shared.md
+	@for tile_size in 1 2 4 8 16 32; do \
+		printf "| %2d | $$( \
+			for n in 128 256 512 1024 2048; do \
+				./build-release/task2 $$n $$tile_size S; \
+			done | tr '\n' '|' | sed 's/|/ | /g' \
+		)\n" $$tile_size >> ./build-release/result_shared.md; \
 	done
 	@clear
-	@cat ./build-release/result.md
+	@printf 'Global Memory Access:\n'
+	@cat ./build-release/result_global.md
+	@printf 'Shared Memory Access:\n'
+	@cat ./build-release/result_shared.md

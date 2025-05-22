@@ -2,7 +2,6 @@
 #include <cuda_runtime.h>
 #include <stdlib.h>
 #include <time.h>
-#include <algorithm>
 
 #define EPSILON 0.000001
 
@@ -46,35 +45,34 @@ void initializeMatrix(double *A, int n) {
   }
 }
 
-bool verifyTransposed(double *A, double *A_T, int n) {
+int verifyTransposed(double *A, double *AT, int n) {
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
-      if (i == j && abs(A[i * n + j] - A_T[i * n + j]) > EPSILON) {
-        return false;
-      } else if (abs(A[i * n + j] - A_T[j * n + i]) > EPSILON) {
-        return false;
+      if (i == j && abs(A[i * n + j] - AT[i * n + j]) > EPSILON) {
+        return 1;
+      } else if (abs(A[i * n + j] - AT[j * n + i]) > EPSILON) {
+        return 1;
       } 
     }
   }
-  return true;
+  return 0;
 }
 
-int main() {
-  int n, tile_size;
-  char memory_mode;
-  printf("Enter matrix size n (512-2048): ");
-  scanf("%d", &n);
-  printf("Enter thread block size (e.g., 16, 32): ");
-  scanf("%d", &tile_size);
-  printf("Memory mode (G for global, S for shared): ");
-  scanf(" %c", &memory_mode);
+int main( int argc, char *argv[] ) {
+  int n = 2048;
+  int tile_size = 32;
+  char memory_mode = 'G';
 
-  if (n < 512 || n > 2048) {
-    printf("Error: n must be between 512 and 2048\n");
-    return 1;
-  }
-  if (tile_size != 16 && tile_size != 32) {
-    printf("Error: tile_size must be 16 or 32\n");
+  n = atoi(argv[1]);
+  tile_size = atoi(argv[2]);
+  memory_mode = argv[3][0];
+
+  // if (n < 512 || n > 2048) {
+  //   printf("Error: n must be between 512 and 2048\n");
+  //   return 1;
+  // }
+  if (tile_size > 32) {
+    printf("Error: tile_size must below 32\n");
     return 1;
   }
   if (memory_mode != 'G' && memory_mode != 'S') {
@@ -117,11 +115,9 @@ int main() {
 
   CUDA_CHECK(cudaMemcpy(h_AT, d_AT, size, cudaMemcpyDeviceToHost));
 
-  if (verifyTransposed(h_A, d_AT, n)) {
-    printf("Transposed correctly. GPU time: %.3f ms\n", milliseconds);
-  } else {
-    printf("Transpose result wrong. GPU time: %.3f ms\n", milliseconds);
-  }
+  printf("%.5E\n", milliseconds);
+
+  int ret = verifyTransposed(h_A, h_AT, n);
 
   free(h_A);
   free(h_AT);
@@ -130,5 +126,5 @@ int main() {
   CUDA_CHECK(cudaEventDestroy(start));
   CUDA_CHECK(cudaEventDestroy(stop));
 
-  return 0;
+  return ret;
 }
