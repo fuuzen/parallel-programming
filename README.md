@@ -24,3 +24,15 @@ cmake 查找和链接 MKL 需要确保有环境变量 `$MKLROOT`。加载环境�
 ```bash
 source /path/to/your/oneapi/setvars.sh
 ```
+
+## CUDA
+
+Windows 上，对于 LSP-Clang 需要 `.clangd` 增加如下内容：(CUDA 11.8 默认安装路径为例)
+
+```yaml
+CompileFlags:
+  Add:
+    - --cuda-path=C://Program Files//NVIDIA GPU Computing Toolkit//CUDA//v11.8
+    - -LC://Program Files//NVIDIA GPU Computing Toolkit//CUDA//v11.8//lib
+    - -IC://Program Files//NVIDIA GPU Computing Toolkit//CUDA//v11.8//include
+```
