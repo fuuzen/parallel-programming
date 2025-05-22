@@ -19,7 +19,7 @@
       </tr>
         <tr style="font-weight:normal;"> 
             <td style="width:20%;text-align:center;">实验名称</td>
-            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">7-MPI并行应用</td>
+            <td style="width:40%;font-weight:normal;border-bottom: 1px solid;text-align:center;font-family:华文仿宋">7-并行最短路径搜索</td>
       </tr>
         <tr style="font-weight:normal;"> 
             <td style="width:20%;text-align:center;">专业名称</td>
