@@ -48,9 +48,7 @@ void initializeMatrix(double *A, int n) {
 int verifyTransposed(double *A, double *AT, int n) {
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
-      if (i == j && abs(A[i * n + j] - AT[i * n + j]) > EPSILON) {
-        return 1;
-      } else if (abs(A[i * n + j] - AT[j * n + i]) > EPSILON) {
+      if (abs(A[i * n + j] - AT[j * n + i]) > EPSILON) {
         return 1;
       } 
     }

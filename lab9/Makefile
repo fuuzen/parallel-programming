@@ -21,7 +21,7 @@ clean:
 	@echo "Cleaning build directories..."
 	@rm -rf build
 
-test: release
+task2: release
 	@echo "Running tests..."
 	@echo "|    |     128     |     256     |     512     |    1024     |    2048     |" > ./build-release/result_global.md
 	@echo "|----|-------------|-------------|-------------|-------------|-------------|" >> ./build-release/result_global.md

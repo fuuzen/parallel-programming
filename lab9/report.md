@@ -76,18 +76,17 @@ make debug
 # 构建程序
 make release
 
-# 运行全部性能测试
-make test
+# 运行 task1 测试
+./build-release/task1
 
-# 单独运行程序
-gen.py 114  # 生成测试输入文件
-./build-release/task1 16 ./data/updated_flower.csv < data/input.txt
+# 运行全部 task2 测试
+make task2
 
 # 清空已构建内容
 make clean
 ```
 
-使用 jupyter notebook 脚本 `draw.ipynb` 根据 `make task2` 输出的结果 (`build/result.md`) 画图，直观展示测试结果随相关参数的变化情况。实验报告中 task2 的曲线图由该脚本生成。
+使用 jupyter notebook 脚本 `draw.ipynb` 根据 `make task2` 输出的结果画图，直观展示测试结果随相关参数的变化情况。实验报告中 task2 的曲线图由该脚本生成。
 
 # 1. CUDA Hello World
 
@@ -103,7 +102,38 @@ make clean
 
 ## 程序实现
 
+核函数实现如下：
 
+```cpp
+__global__ void helloWorldKernel() {
+  int blockId = blockIdx.x;
+  int threadIdX = threadIdx.x;
+  int threadIdY = threadIdx.y;
+  printf(
+    "Hello World from Thread (%d, %d) in Block %d!\n", 
+    threadIdX, threadIdY, blockId
+  );
+}
+```
+
+host 执行代码如下：
+
+```cpp
+printf("Hello World from the host!\n");
+  
+dim3 blockDim(m, k);
+dim3 gridDim(n, 1);
+
+helloWorldKernel<<<gridDim, blockDim>>>();
+
+cudaDeviceSynchronize();
+```
+
+## 程序测试
+
+测试运行截图如下：
+
+![1](images/1.png)
 
 # 2. CUDA 矩阵转置
 
@@ -139,7 +169,7 @@ __global__ void transposeGlobal(float *A, float *AT, int n) {
 
 ## 共享内存实现
 
-共享内存是每个线程块私有的高速内存，位于 GPU 片上，访问延迟远低于全局内存。
+共享内存是每个线程块私有的高速内存，位于 GPU 片上，访问延迟远低于全局内存。这里虽说是“共享内存实现”，但实际上不可能不使用全局内存，只是在全局内存的基础上，使用共享内存试图实现加速。
 
 函数代码：
 
@@ -160,6 +190,47 @@ __global__ void transposeShared(double *A, double *AT, int n, int tile_size) {
 }
 ```
 
-每个线程块分配一个 `tile_size × tile_size` 的共享内存数组 `tile[32][32]`（固定为最大 32×32 以支持 tile_size<=32）。每个线程根据全局索引 `(x, y)` 从全局内存读取 $A[y][x]$（地址 `y * n + x`），并将其存储到共享内存的 `tile[threadIdx.y][threadIdx.x]`。然后在转置前先 `__syncthreads()` 确保线程块内的所有线程完成共享内存的加载。共享内存的访问是连续的（合并访问），因为线程块内的线程按顺序加载数据。
+每个线程块分配一个 `tile_size × tile_size` 的共享内存数组 `tile[32][32]`（固定为最大 32×32 以支持 tile_size<=32）。每个线程根据全局索引 `(x, y)` 从全局内存读取 $A[y][x]$（地址 `y * n + x`），并将其存储到共享内存的 `tile[threadIdx.y][threadIdx.x]`，这一步存到共享内存的就是转置后的数据。然后在传回全局内存前先 `__syncthreads()` 确保线程块内的所有线程完成共享内存的加载。共享内存的访问是连续的（合并访问），因为线程块内的线程按顺序加载数据。
 
+## 验证正确性
 
+为了验证矩阵是否准确转置，用如下主机上运行的串行化实现验证：
+
+```cpp
+#define EPSILON 0.000001
+
+int verifyTransposed(double *A, double *AT, int n) {
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < n; ++j) {
+      if (abs(A[i * n + j] - AT[j * n + i]) > EPSILON) {
+        return 1;
+      } 
+    }
+  }
+  return 0;
+}
+```
+
+## 程序测试
+
+全局内存实现下，GPU 时间随着矩阵大小（左图）、tile 大小（右图）的变化情况分别如下：
+
+<div style="text-align: center;">
+  <img src="images/global_matrix_size.png" alt="global_matrix_size" style="zoom:30%;" />
+  <img src="images/global_tile_size.png" alt="global_tile_size" style="zoom:30%;" />
+</div>
+
+共享内存实现下，GPU 时间随着矩阵大小（左图）、tile 大小（右图）的变化情况分别如下：
+
+<div style="text-align: center;">
+  <img src="images/shared_matrix_size.png" alt="shared_matrix_size" style="zoom:30%;" />
+  <img src="images/shared_tile_size.png" alt="shared_tile_size" style="zoom:30%;" />
+</div>
+
+可以看出总体上 tile 大小越大 (block 数量越大)，并行性能越好。但是 tile 大小到达足够大之后，并行加速提升就变小甚至消失。例如对于 256x256 规模的矩阵转置，当 tile 大小达到 4x4 之后，无论再怎么扩大 tile，都无法带来显著的加速了；对于 2048x2048 规模的矩阵，这个 tile size 的阈值抬升为 8x8，也就是当 tile 大小达到 8x8 之后即使继续扩大 tile 也无法带来显著的加速。
+
+最后考虑两种访存实现的对比，将二者 GPU 时间随着矩阵大小变化情况画在同一张对比图如下：
+
+<img src="images/comparison.png" alt="comparison" style="zoom:40%;" />
+
+这里可以看到纯全局内存的实现比增加共享内存后的性能要稍微好一些。可能是因为这里共享内存的实现涉及的内存操作更多，而且矩阵转置这一操作没有任何计算量，至多就是计算新下标的计算量，甚至可以认为是纯内存操作，所以单纯的全局内存就足够了。
