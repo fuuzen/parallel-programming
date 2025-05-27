@@ -27,7 +27,12 @@ source /path/to/your/oneapi/setvars.sh
 
 ## CUDA
 
-Windows 上，对于 LSP-Clang 需要 `.clangd` 增加如下内容：(CUDA 11.8 默认安装路径为例)
+对于 LSP-Clang 需要 `.clangd` 增加：
+- `--cuda-path` 指定 cuda 安装目录
+- `-L` link lib 目录
+- `-I` include 头文件目录
+
+Windows 上 CUDA 11.8 默认安装路径为例如下：
 
 ```yaml
 CompileFlags:
@@ -36,3 +41,15 @@ CompileFlags:
     - -LC://Program Files//NVIDIA GPU Computing Toolkit//CUDA//v11.8//lib
     - -IC://Program Files//NVIDIA GPU Computing Toolkit//CUDA//v11.8//include
 ```
+
+在 Linux 上 archlinux 默认安装在 `/opt` 下为例如下：
+
+```yaml
+CompileFlags:
+  Add:
+    - --cuda-path=/opt/cuda
+    - -L/opt/cuda/lib
+    - -I/opt/cuda/include
+```
+
+CUDA 编程时想用 LSP 似乎只能这样，将需要的头文件、库手动写在 `.clangd`，让 LSP 把 `.cu` 当作 cpp 文件来做语法检查......
