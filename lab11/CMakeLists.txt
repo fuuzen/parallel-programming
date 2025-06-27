@@ -7,15 +7,15 @@ enable_language(CUDA)
 
 file(GLOB_RECURSE SOURCES "src/*.cu")
 
-find_package(OpenMP REQUIRED)
-
 add_executable(test ${SOURCES})
-target_include_directories(test PRIVATE ${PROJECT_SOURCE_DIR}/common)
+target_include_directories(test
+    PRIVATE ${PROJECT_SOURCE_DIR}/common
+    PRIVATE /usr/include/opencv4
+)
 target_compile_options(test PUBLIC
     -O3  # nvcc can't use Ofast
-    -Xcompiler=-fopenmp  # for OpenMP
 )
 target_link_libraries(test
-    -lcublas  # link CUBLAS
-    OpenMP::OpenMP_CXX  # link OpenMP
+    -lcudnn  # link CuDNN
+    -lopencv_imgcodecs -lopencv_imgproc -lopencv_core  # link OpenCV
 )  

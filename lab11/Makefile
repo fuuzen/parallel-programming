@@ -23,14 +23,47 @@ clean:
 
 test: release
 	@echo "Running tests..."
-	@echo "|      | CUBLAS GFLOPS |  CUBLAS msec  | MyImpl GFLOPS |  MyImpl msec  |" > ./build-release/result.md
-	@echo "|      | CUBLAS GFLOPS |  CUBLAS msec  | MyImpl GFLOPS |  MyImpl msec  |"
-	@echo "|------|---------------|---------------|---------------|---------------|" >> ./build-release/result.md
-	@echo "|------|---------------|---------------|---------------|---------------|"
-	@for n in 1 2 4 8 16 32 64 128; do \
+	@echo "|      | SlidingWindow |  im2col+gemm  |     CuDNN     |" > ./build-release/result.md
+	@echo "|      | SlidingWindow |  im2col+gemm  |     CuDNN     |"
+	@echo "|------|---------------|---------------|---------------|" >> ./build-release/result.md
+	@echo "|------|---------------|---------------|---------------|"
+	@for n in 128 256 512 1024 2048; do \
 		s=$$(printf "| %4d | \
-$$(./build-release/test --sizemult=$$n --method=0 | grep Performance | awk '{printf "%13.3f | %13.3f |", $$2, $$5}')\
-$$(./build-release/test --sizemult=$$n --method=1 | grep Performance | awk '{printf "%13.3f | %13.3f |", $$2, $$5}')\
+$$(./build-release/test --input=images/input_$$n.png --method=0 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+$$(./build-release/test --input=images/input_$$n.png --method=1 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+$$(./build-release/test --input=images/input_$$n.png --method=2 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+\n" $$n); \
+		echo "$$s" >> ./build-release/result.md; \
+		echo "$$s"; \
+	done
+
+test-stride2: release
+	@echo "Running tests..."
+	@echo "|      | SlidingWindow |  im2col+gemm  |     CuDNN     |" > ./build-release/result.md
+	@echo "|      | SlidingWindow |  im2col+gemm  |     CuDNN     |"
+	@echo "|------|---------------|---------------|---------------|" >> ./build-release/result.md
+	@echo "|------|---------------|---------------|---------------|"
+	@for n in 128 256 512 1024 2048; do \
+		s=$$(printf "| %4d | \
+$$(./build-release/test --input=images/input_$$n.png --method=0 --stride=2 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+$$(./build-release/test --input=images/input_$$n.png --method=1 --stride=2 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+$$(./build-release/test --input=images/input_$$n.png --method=2 --stride=2 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+\n" $$n); \
+		echo "$$s" >> ./build-release/result.md; \
+		echo "$$s"; \
+	done
+
+test-stride3: release
+	@echo "Running tests..."
+	@echo "|      | SlidingWindow |  im2col+gemm  |     CuDNN     |" > ./build-release/result.md
+	@echo "|      | SlidingWindow |  im2col+gemm  |     CuDNN     |"
+	@echo "|------|---------------|---------------|---------------|" >> ./build-release/result.md
+	@echo "|------|---------------|---------------|---------------|"
+	@for n in 128 256 512 1024 2048; do \
+		s=$$(printf "| %4d | \
+$$(./build-release/test --input=images/input_$$n.png --method=0 --stride=3 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+$$(./build-release/test --input=images/input_$$n.png --method=1 --stride=3 | grep Performance | awk '{printf "%13.3f |", $$2}')\
+$$(./build-release/test --input=images/input_$$n.png --method=2 --stride=3 | grep Performance | awk '{printf "%13.3f |", $$2}')\
 \n" $$n); \
 		echo "$$s" >> ./build-release/result.md; \
 		echo "$$s"; \

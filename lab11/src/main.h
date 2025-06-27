@@ -1,3 +1,4 @@
+#pragma once
 /*
 * 提供如下三种方法实现的卷积计算的测试：
 * 1. 最原始的单个滑动窗口实现简单直接卷积
@@ -8,33 +9,33 @@
 */
 
 // Utilities and system includes
-#include <omp.h>  // accelerate host computation
 #include <assert.h>
-#include <helper_string.h>  // helper for shared functions common to CUDA Samples
+
+// helper for shared functions common to CUDA Samples
+#include <helper_cuda.h>
 
 // CUDA runtime
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 
-// CUDA and CUBLAS functions
-#include <helper_image.h>
-#include <helper_cuda.h>
+// conversion between image file and cv::Mat
+#include "image.h"
 
-#define MAX_MULTIPLE_ISIZE 128
-#define MIN_MULTIPLE_ISIZE 1
-#define BLOCK_SIZE 32
+// convolution params
+#define BATCH_SIZE 1
+#define KERNEL_H 3
+#define KERNEL_W 3
+#define CHANNELS 3 // 认为是 RGB 三通道
+#define STRIDE 1
 
-#ifndef min
-#define min(a, b) ((a < b) ? a : b)
-#endif
-#ifndef max
-#define max(a, b) ((a > b) ? a : b)
-#endif
-
-// Optional Command-line multiplier for matrix sizes
-typedef struct _matrixSize {
-  unsigned int uiWA, uiHA, uiWB, uiHB, uiWC, uiHC;
-} sMatrixSize;
-
-
-void gemm(float* A, float* B, float* C, sMatrixSize &matrix_size);
+// 边缘检测卷积核(KCHW)
+const float KERNEL[KERNEL_H * KERNEL_W * CHANNELS * CHANNELS] = {
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+  1,  1, 1, 1, -8, 1, 1,  1, 1,
+};
